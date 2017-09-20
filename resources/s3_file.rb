@@ -13,6 +13,7 @@ property :use_last_modified, [true, false], default: true
 property :atomic_update, [true, false], default: true
 property :force_unlink, [true, false], default: false
 property :manage_symlink_source, [true, false]
+property :verification, [String, Proc, nil]
 if node['platform_family'] == 'windows'
   property :inherits, [true, false], default: true
   property :rights, Hash
@@ -44,6 +45,10 @@ end
 
 action :touch do
   do_s3_file(:touch)
+end
+
+def verify(&block)
+  @verification = Proc.new { |path| block.call(path) } if block_given?
 end
 
 action_class do
@@ -116,6 +121,7 @@ action_class do
       sensitive new_resource.sensitive
       retries new_resource.retries
       retry_delay new_resource.retry_delay
+      verify { |path| new_resource.verification.call(path) }
       if node['platform_family'] == 'windows'
         inherits new_resource.inherits
         rights new_resource.rights
