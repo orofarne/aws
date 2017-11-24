@@ -44,3 +44,15 @@ aws_s3_file '/tmp/a_file_2' do
   aws_secret_access_key node['aws_test']['access_key']
   region 'us-west-2'
 end
+
+# verify file checksum
+aws_s3_file '/tmp/a_file_3' do
+  bucket node['aws_test']['bucket_west']
+  remote_path node['aws_test']['s3key']
+  aws_access_key node['aws_test']['key_id'] # use the modern property name
+  aws_secret_access_key node['aws_test']['access_key']
+  region 'us-west-2'
+  verify { |path|
+    File.size(path) > 0
+  }
+end
